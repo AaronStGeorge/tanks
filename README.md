@@ -1,2 +1,6 @@
 # tanks-app
-![alt tag](http://spartacus-educational.com/tank.jpg)
+Online game that cen be played by two people any place on the planet. Drive tanks around and shoot at eachother.
+
+Using websockets and the GO programming language
+
+Current progress can be viewed at [aaronstgeorge.co](aaronstgeorge.co)
