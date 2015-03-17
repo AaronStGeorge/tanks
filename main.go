@@ -15,6 +15,13 @@ type User struct {
 func main() {
 	r := mux.NewRouter()
 
+	// Subrouter for POSTed requests
+	s := r.Methods("POST").Subrouter()
+
+	s.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "login POST "+r.FormValue("UserName")+" "+r.FormValue("Password"))
+	})
+
 	t := template.Must(template.ParseFiles("templates/main.tmpl", "templates/header.tmpl", "templates/footer.tmpl"))
 
 	r.PathPrefix("/static/stylesheets/").Handler(http.StripPrefix("/static/stylesheets/", http.FileServer(http.Dir("static/stylesheets"))))
@@ -27,11 +34,6 @@ func main() {
 	r.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/html/login.html")
 	})
-
-	r.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		//http.ServeFile(w, r, "static/html/login.html")
-		fmt.Fprint(w, "login POST")
-	}).Methods("POST")
 
 	fmt.Println("serving...")
 	http.ListenAndServe(":80", r)
