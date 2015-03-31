@@ -10,7 +10,12 @@
 	<nav> 
 		<ul>
 			<li><mark> Welcome to Tanks app! </mark></li>
-			<li><a href="/login"> Login </a></li>
+			{{if ne .Id -1}} 
+			<li><mark> {{.UserName}} </mark></li>
+			<li><a href="/login"> logout </a></li>
+			{{else}} 
+			<li><a href="/login"> login </a></li>
+			{{end}}
 		</ul>
 	</nav>
 {{end}}
