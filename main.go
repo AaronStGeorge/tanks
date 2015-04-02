@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/apcera/nats"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	//"github.com/gorilla/websocket"
 	"html/template"
 	"log"
 	"net/http"
@@ -15,6 +17,7 @@ type Global struct {
 	store *sessions.CookieStore
 	db    *sql.DB
 	t     *template.Template
+	ec    *nats.EncodedConn
 }
 
 type Context struct {
@@ -58,20 +61,28 @@ func main() {
 		MaxAge: 0,
 	}
 
-	// Open database connection
+	// open database connection
 	db, err := sql.Open("mysql", "root:asmallpig21@/Tanks")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
+	// test connection
 	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	t := template.Must(template.ParseFiles("templates/main.tmpl", "templates/header.tmpl", "templates/footer.tmpl"))
+	// create connection to nats server
+	nc, _ := nats.Connect(nats.DefaultURL)
+	ec, _ := nats.NewEncodedConn(nc, "json")
+	defer ec.Close()
 
-	global := &Global{db: db, store: store, t: t}
+	t := template.Must(template.ParseFiles("templates/main.tmpl",
+		"templates/header.tmpl", "templates/footer.tmpl",
+		"templates/home.html"))
+
+	global := &Global{db: db, store: store, ec: ec, t: t}
 
 	r := mux.NewRouter()
 
@@ -79,10 +90,20 @@ func main() {
 	s := r.Methods("POST").Subrouter()
 	s.Handle("/login", &Auth{global: global, fn: login})
 
-	r.PathPrefix("/static/stylesheets/").Handler(http.StripPrefix("/static/stylesheets/", http.FileServer(http.Dir("static/stylesheets"))))
-	r.PathPrefix("/static/images/").Handler(http.StripPrefix("/static/images/", http.FileServer(http.Dir("static/images"))))
+	// serve static files
+	r.PathPrefix("/static/stylesheets/").
+		Handler(http.StripPrefix("/static/stylesheets/",
+		http.FileServer(http.Dir("static/stylesheets"))))
+
+	r.PathPrefix("/static/images/").
+		Handler(http.StripPrefix("/static/images/",
+		http.FileServer(http.Dir("static/images"))))
 
 	r.Handle("/", &Auth{global: global, fn: mainPage})
+
+	r.Handle("/logout", &Auth{global: global, fn: logout})
+	r.Handle("/play", &Auth{global: global, fn: play})
+	r.Handle("/ws", &Auth{global: global, fn: wsHandler})
 
 	r.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/html/login.html")

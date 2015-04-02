@@ -12,7 +12,8 @@
 			<li><mark> Welcome to Tanks app! </mark></li>
 			{{if ne .Id -1}} 
 			<li><mark> {{.UserName}} </mark></li>
-			<li><a href="/login"> logout </a></li>
+			<li><a href="/play"> play </a></li>
+			<li><a href="/logout"> logout </a></li>
 			{{else}} 
 			<li><a href="/login"> login </a></li>
 			{{end}}
