@@ -33,6 +33,23 @@ func wsHandler(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) 
 	c.reader()
 }
 
+func registrationHandler(w http.ResponseWriter, r *http.Request,
+	ctx *Context, g *Global) {
+
+	passwordHash, err := bcrypt.GenerateFromPassword(
+		[]byte(r.FormValue("Password")), bcrypt.MinCost)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = g.db.Exec("INSERT INTO Users (UserName, Password) VALUES(?,?)",
+		r.FormValue("UserName"), passwordHash)
+	if err != nil {
+		fmt.Fprintf(w, "UserName Alredy taken")
+	} else {
+		fmt.Fprintf(w, "You are Registerd")
+	}
+}
+
 func mainPage(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) {
 	g.t.ExecuteTemplate(w, "main.tmpl", ctx.User)
 }

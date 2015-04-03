@@ -89,6 +89,7 @@ func main() {
 	// Subrouter for POSTed requests
 	s := r.Methods("POST").Subrouter()
 	s.Handle("/login", &Auth{global: global, fn: login})
+	s.Handle("/register", &Auth{global: global, fn: registrationHandler})
 
 	// serve static files
 	r.PathPrefix("/static/stylesheets/").
@@ -107,6 +108,10 @@ func main() {
 
 	r.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/html/login.html")
+	})
+
+	r.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/html/register.html")
 	})
 
 	fmt.Println("serving...")

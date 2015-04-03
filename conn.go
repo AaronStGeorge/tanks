@@ -20,15 +20,13 @@ func (c *connection) reader() {
 			break
 		}
 
-		c.sendCh <- string(message)
+		c.sendCh <- c.ctx.User.UserName + ": " + string(message)
 	}
 	c.ws.Close()
 }
 
 func (c *connection) writer() {
 	for message := range c.recvCh {
-
-		message = c.ctx.User.UserName + ": " + message
 
 		err := c.ws.WriteMessage(websocket.TextMessage, []byte(message))
 		if err != nil {
