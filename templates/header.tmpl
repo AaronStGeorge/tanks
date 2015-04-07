@@ -5,19 +5,31 @@
 	<meta charset="UTF-8">
 	<title>Tanks</title>
 	<link rel="stylesheet" type="text/css" href="/static/stylesheets/mainpage.css">
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+	<script src="../static/js/test.js"></script>
 </head>
 <body>
-	<nav> 
+	<nav>
 		<ul>
-			<li><mark> Welcome to Tanks app! </mark></li>
-			{{if ne .Id -1}} 
-			<li><mark> {{.UserName}} </mark></li>
-			<li><a href="/play"> play </a></li>
+			{{if ne .User_c.Id -1}}
+			<li><mark> Tanks App </mark></li>
+			<li><mark> loged in as: {{.User_c.UserName}} </mark></li>
+			<li><a href="/friend"> add friend </a></li>
 			<li><a href="/logout"> logout </a></li>
-			{{else}} 
+			{{else}}
+			<li><mark> Welcome to Tanks app! </mark></li>
 			<li><a href="/login"> login </a></li>
 			<li><a href="/register"> register </a></li>
 			{{end}}
 		</ul>
 	</nav>
+	<aside id="sidebar">
+		{{if ne .Num_freinds 0}}
+			<div><mark> Start a game </mark></div>
+			{{ range .Friends }}
+				<div> <a href="/play"> {{.UserName}} </a> </div>
+			{{ end }}
+		{{ end }} 
+	</aside>
 {{end}}
+
