@@ -67,7 +67,7 @@ func main() {
 	}
 
 	// open database connection
-	db, err := sql.Open("mysql", "root:asmallpig21@/Tanks")
+	db, err := sql.Open("mysql", "root:@/Tanks")
 	if err != nil {
 		log.Fatal(err)
 	}
