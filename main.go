@@ -2,10 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/apcera/nats"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/context"
-	//"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
@@ -60,35 +60,52 @@ func main() {
 
 	global := &Global{db: db, store: store, ec: ec}
 
-	stdChain := alice.New(context.ClearHandler, global.loadSession)
-	loadUserData := stdChain.Append(global.loadUser, global.loadFriends)
+	stdChain := alice.New(global.loadSession)
+	loadUser := stdChain.Append(global.loadUser)
+	loadUserData := loadUser.Append(global.loadFriends)
 
 	router := httprouter.New()
 
+	// mainPage
 	router.Handler("GET", "/", loadUserData.Then(http.HandlerFunc(mainPage)))
-	router.HandlerFunc("GET", "/login",
-		func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "./html/login.html")
-		})
+
+	// login
+	router.HandlerFunc("GET", "/login", loginGET)
 	router.Handler("POST", "/login", stdChain.Then(
-		http.HandlerFunc(global.login)))
-	router.HandlerFunc("GET", "/register",
-		func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "./html/register.html")
-		})
+		http.HandlerFunc(global.loginPOST)))
+
+	// logout
 	router.Handler("GET", "/logout", stdChain.Then(http.HandlerFunc(logout)))
+
+	// play
+	router.HandlerFunc("GET", "/play", http.HandlerFunc(play))
+
+	// websocket
+	router.Handler("GET", "/ws", loadUser.Then(http.HandlerFunc(
+		global.wsHandler)))
+
+	// register
+	router.HandlerFunc("GET", "/register", registerGET)
+	router.Handler("POST", "/register", stdChain.Then(
+		http.HandlerFunc(global.registerPOST)))
+
+	// add friend
+	router.HandlerFunc("GET", "/friend", friendGET)
+	router.Handler("POST", "/friend", loadUser.Then(
+		http.HandlerFunc(global.friendPOST)))
 
 	// Serve static files from the ./public directory
 	router.ServeFiles("/static/*filepath", http.Dir("./public/"))
-	log.Fatal(http.ListenAndServe(":80", (router)))
+
+	fmt.Println("serving...")
+	log.Fatal(http.ListenAndServe(":80", context.ClearHandler(router)))
 
 	/*
-
 		r := mux.NewRouter()
 
 		// Subrouter for POSTed requests
 		s := r.Methods("POST").Subrouter()
-		s.Handle("/login", &Auth{global: global, fn: login})
+		s.Handle("/learHandler(
 		s.Handle("/register", &Auth{global: global, fn: registrationHandler})
 		s.Handle("/friend", &Auth{global: global, fn: friendHandler})
 
@@ -125,7 +142,6 @@ func main() {
 			http.ServeFile(w, r, "static/html/register.html")
 		})
 
-		fmt.Println("serving...")
 		http.ListenAndServe(":80", r)
 	*/
 }
