@@ -1,11 +1,11 @@
 package main
 
 import (
-	//"database/sql"
-	//"fmt"
-	//_ "github.com/go-sql-driver/mysql"
+	"database/sql"
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	//"github.com/gorilla/websocket"
-	//"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 )
@@ -29,8 +29,57 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	}{User_c: user, Num_freinds: len(friends), Friends: friends})
 }
 
-/*
+func logout(w http.ResponseWriter, r *http.Request) {
 
+	session, err := GetSession(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	session.Values["Id"] = -1
+	session.Values["UserName"] = ""
+	err = session.Save(r, w)
+	if err != nil {
+		log.Fatal(err)
+	}
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (g *Global) login(w http.ResponseWriter, r *http.Request) {
+	// TODO: make errors flash messages
+	// TODO: make all communication with server AJAX or similar
+	var password string
+	var id int
+
+	session, err := GetSession(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	UserName := r.FormValue("UserName")
+
+	err = g.db.QueryRow("SELECT id, Password FROM Users WHERE UserName = ?",
+		UserName).Scan(&id, &password)
+	switch {
+	case err == sql.ErrNoRows:
+		fmt.Fprintf(w, "No user with that UserName.")
+	case err != nil:
+		log.Fatal(err)
+	case bcrypt.CompareHashAndPassword([]byte(password),
+		[]byte(r.FormValue("Password"))) != nil:
+		fmt.Fprintf(w, "Incorrect password")
+	default:
+		session.Values["UserName"] = UserName
+		session.Values["Id"] = id
+		err = session.Save(r, w)
+		if err != nil {
+			log.Fatal(err)
+		}
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
+}
+
+/*
 var upgrader = &websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
 
 func wsHandler(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) {
@@ -47,35 +96,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) 
 	c := &connection{sendCh: sendCh, recvCh: recvCh, ws: ws, ctx: ctx}
 	go c.writer()
 	c.reader()
-}
-
-func login(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) {
-	// TODO: make errors flash messages
-	// TODO: make all communication with server AJAX or similar
-	var Password string
-	var id int
-
-	UserName := r.FormValue("UserName")
-
-	err := g.db.QueryRow("SELECT id, Password FROM Users WHERE UserName = ?",
-		UserName).Scan(&id, &Password)
-	switch {
-	case err == sql.ErrNoRows:
-		fmt.Fprintf(w, "No user with that UserName.")
-	case err != nil:
-		log.Fatal(err)
-	case bcrypt.CompareHashAndPassword([]byte(Password),
-		[]byte(r.FormValue("Password"))) != nil:
-		fmt.Fprintf(w, "Incorrect password")
-	default:
-		ctx.session.Values["UserName"] = UserName
-		ctx.session.Values["id"] = id
-		err := ctx.session.Save(r, w)
-		if err != nil {
-			log.Fatal(err)
-		}
-		http.Redirect(w, r, "/", http.StatusFound)
-	}
 }
 
 func friendHandler(w http.ResponseWriter, r *http.Request,
@@ -142,14 +162,6 @@ func registrationHandler(w http.ResponseWriter, r *http.Request,
 }
 
 
-func logout(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) {
-	ctx.session.Values["id"] = -1
-	err := ctx.session.Save(r, w)
-	if err != nil {
-		log.Fatal(err)
-	}
-	http.Redirect(w, r, "/", http.StatusFound)
-}
 
 func play(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) {
 	g.t.ExecuteTemplate(w, "home.html", r.Host)

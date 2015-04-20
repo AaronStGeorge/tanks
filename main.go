@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	//"fmt"
 	"github.com/apcera/nats"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/context"
@@ -61,15 +60,27 @@ func main() {
 
 	global := &Global{db: db, store: store, ec: ec}
 
-	stdChain := alice.New(context.ClearHandler, global.loadUser)
-	withFreinds := stdChain.Append(global.loadFriends)
+	stdChain := alice.New(context.ClearHandler, global.loadSession)
+	loadUserData := stdChain.Append(global.loadUser, global.loadFriends)
 
 	router := httprouter.New()
 
-	// Serve static files from the ./static directory
-	router.Handler("GET", "/", withFreinds.Then(http.HandlerFunc(mainPage)))
-	router.ServeFiles("/public/*filepath", http.Dir("/public"))
-	log.Fatal(http.ListenAndServe(":80", router))
+	router.Handler("GET", "/", loadUserData.Then(http.HandlerFunc(mainPage)))
+	router.HandlerFunc("GET", "/login",
+		func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "./html/login.html")
+		})
+	router.Handler("POST", "/login", stdChain.Then(
+		http.HandlerFunc(global.login)))
+	router.HandlerFunc("GET", "/register",
+		func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "./html/register.html")
+		})
+	router.Handler("GET", "/logout", stdChain.Then(http.HandlerFunc(logout)))
+
+	// Serve static files from the ./public directory
+	router.ServeFiles("/static/*filepath", http.Dir("./public/"))
+	log.Fatal(http.ListenAndServe(":80", (router)))
 
 	/*
 
