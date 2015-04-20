@@ -1,14 +1,35 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/websocket"
-	"golang.org/x/crypto/bcrypt"
+	//"database/sql"
+	//"fmt"
+	//_ "github.com/go-sql-driver/mysql"
+	//"github.com/gorilla/websocket"
+	//"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 )
+
+func mainPage(w http.ResponseWriter, r *http.Request) {
+
+	user, err := GetUser(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	friends, err := GetFrends(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	templates["index"].Execute(w, struct {
+		User_c      User
+		Num_freinds int
+		Friends     []User
+	}{User_c: user, Num_freinds: len(friends), Friends: friends})
+}
+
+/*
 
 var upgrader = &websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
 
@@ -120,39 +141,6 @@ func registrationHandler(w http.ResponseWriter, r *http.Request,
 	}
 }
 
-func mainPage(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) {
-
-	friends := make([]User, 0, 10)
-
-	if ctx.User.Id != -1 {
-
-		rows, err := g.db.Query("SELECT user_id_2, Username FROM "+
-			"Friends INNER JOIN Users "+
-			"ON Friends.user_id_2=Users.id "+
-			"WHERE user_id_1 = ?",
-			ctx.User.Id)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for rows.Next() {
-			var id int
-			var UserName string
-			err = rows.Scan(&id, &UserName)
-			if err != nil {
-				log.Fatal(err)
-			}
-			friends = append(friends, User{UserName: UserName, Id: id})
-		}
-		rows.Close()
-	}
-
-	g.t.ExecuteTemplate(w, "main.tmpl",
-		struct {
-			User_c      User
-			Num_freinds int
-			Friends     []User
-		}{User_c: ctx.User, Num_freinds: len(friends), Friends: friends})
-}
 
 func logout(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) {
 	ctx.session.Values["id"] = -1
@@ -166,3 +154,4 @@ func logout(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) {
 func play(w http.ResponseWriter, r *http.Request, ctx *Context, g *Global) {
 	g.t.ExecuteTemplate(w, "home.html", r.Host)
 }
+*/
