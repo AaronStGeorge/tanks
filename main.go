@@ -99,49 +99,4 @@ func main() {
 
 	fmt.Println("serving...")
 	log.Fatal(http.ListenAndServe(":80", context.ClearHandler(router)))
-
-	/*
-		r := mux.NewRouter()
-
-		// Subrouter for POSTed requests
-		s := r.Methods("POST").Subrouter()
-		s.Handle("/learHandler(
-		s.Handle("/register", &Auth{global: global, fn: registrationHandler})
-		s.Handle("/friend", &Auth{global: global, fn: friendHandler})
-
-		// serve static files
-		r.PathPrefix("/static/stylesheets/").
-			Handler(http.StripPrefix("/static/stylesheets/",
-			http.FileServer(http.Dir("static/stylesheets"))))
-
-		r.PathPrefix("/static/images/").
-			Handler(http.StripPrefix("/static/images/",
-			http.FileServer(http.Dir("static/images"))))
-
-		r.PathPrefix("/static/js/").
-			Handler(http.StripPrefix("/static/js/",
-			http.FileServer(http.Dir("static/js"))))
-
-		r.Handle("/", &Auth{global: global, fn: mainPage})
-		r.Handle("/logout", &Auth{global: global, fn: logout})
-		r.Handle("/ws", &Auth{global: global, fn: wsHandler})
-
-		r.HandleFunc("/play", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "static/html/play.html")
-		})
-
-		r.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "static/html/login.html")
-		})
-
-		r.HandleFunc("/friend", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "static/html/friend.html")
-		})
-
-		r.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "static/html/register.html")
-		})
-
-		http.ListenAndServe(":80", r)
-	*/
 }
