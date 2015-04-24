@@ -27,7 +27,7 @@
 		{{if ne .Num_freinds 0}}
 			<div><mark> Start a game </mark></div>
 			{{ range .Friends }}
-				<div> <a href="/play"> {{.UserName}} </a> </div>
+				<div> <a id="{{.Id}}" href="/play"> {{.UserName}} </a> </div>
 			{{ end }}
 		{{ end }}
 	</aside>

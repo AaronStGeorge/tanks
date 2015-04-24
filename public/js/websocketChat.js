@@ -30,6 +30,7 @@ $(function() {
         appendLog($("<div><b>Connection closed.</b></div>"));
     };
     conn.onmessage = function(evt) {
-        appendLog($("<div/>").text(evt.data));
+        obj = JSON.parse(evt.data);
+        appendLog($("<div/>").text(obj.Origin.UserName + ": " + obj.Content));
     };
 });

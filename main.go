@@ -80,9 +80,13 @@ func main() {
 	// play
 	router.HandlerFunc("GET", "/play", http.HandlerFunc(play))
 
-	// websocket
+	// game websocket
 	router.Handler("GET", "/ws", loadUser.Then(http.HandlerFunc(
 		global.wsHandler)))
+
+	// mainPage websocket
+	router.Handler("GET", "/mpws", loadUserData.Then(http.HandlerFunc(
+		global.mainPageWs)))
 
 	// register
 	router.HandlerFunc("GET", "/register", registerGET)

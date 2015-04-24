@@ -5,7 +5,6 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
-	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
@@ -175,30 +174,6 @@ func (g *Global) registerPOST(w http.ResponseWriter, r *http.Request) {
 			saveUserToSessionAndSendHome(w, r, session, userName, int(id))
 		}
 	}
-}
-
-var upgrader = &websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
-
-func (g *Global) wsHandler(w http.ResponseWriter, r *http.Request) {
-
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	user, err := GetUser(r)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	recvCh := make(chan string)
-	g.ec.BindRecvChan("hello", recvCh)
-	sendCh := make(chan string)
-	g.ec.BindSendChan("hello", sendCh)
-
-	c := &connection{sendCh: sendCh, recvCh: recvCh, ws: ws, user: user}
-	go c.writer()
-	c.reader()
 }
 
 func play(w http.ResponseWriter, r *http.Request) {
