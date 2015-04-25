@@ -28,6 +28,12 @@ var templates = map[string]*template.Template{
 type User struct {
 	UserName string
 	Id       int
+	// Only this is listening to fmt.Sprintf("x%d", user.Id) this is this
+	// users "phoneNumber".
+	PhoneNumber string
+	// Every user intersted in information about user is listeneing on
+	// string(user.Id) this is their twitter.
+	Twitter string
 }
 
 func main() {
@@ -81,8 +87,8 @@ func main() {
 	router.HandlerFunc("GET", "/play", http.HandlerFunc(play))
 
 	// game websocket
-	router.Handler("GET", "/ws", loadUser.Then(http.HandlerFunc(
-		global.wsHandler)))
+	router.Handler("GET", "/gpws", loadUser.Then(http.HandlerFunc(
+		global.gamePageWs)))
 
 	// mainPage websocket
 	router.Handler("GET", "/mpws", loadUserData.Then(http.HandlerFunc(

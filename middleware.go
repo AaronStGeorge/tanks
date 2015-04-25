@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gorilla/context"
 	"github.com/gorilla/sessions"
 	"log"
@@ -63,7 +64,13 @@ func (g *Global) loadFriends(next http.Handler) http.Handler {
 				if err != nil {
 					log.Fatal(err)
 				}
-				friends = append(friends, User{UserName: userName, Id: id})
+				friends = append(friends,
+					User{
+						UserName:    userName,
+						Id:          id,
+						PhoneNumber: fmt.Sprintf("x%d", id),
+						Twitter:     fmt.Sprintf("%d", id),
+					})
 			}
 			rows.Close()
 		}
@@ -105,8 +112,14 @@ func (g *Global) loadUser(next http.Handler) http.Handler {
 		if session.IsNew {
 			user.Id = -1
 		} else {
-			user.Id = session.Values["Id"].(int)
-			user.UserName = session.Values["UserName"].(string)
+			UserName := session.Values["UserName"].(string)
+			Id := session.Values["Id"].(int)
+			user = User{
+				UserName:    UserName,
+				Id:          Id,
+				PhoneNumber: fmt.Sprintf("x%d", Id),
+				Twitter:     fmt.Sprintf("%d", Id),
+			}
 		}
 		context.Set(r, userKey, user)
 

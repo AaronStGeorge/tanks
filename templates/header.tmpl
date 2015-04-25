@@ -27,7 +27,10 @@
 		{{if ne .Num_freinds 0}}
 			<div><mark> Start a game </mark></div>
 			{{ range .Friends }}
-				<div> <a id="{{.Id}}" href="/play"> {{.UserName}} </a> </div>
+				<div> <a href="javascript:void(0)" onclick="myJsFunc({{.PhoneNumber}});" id="{{.Id}}"> {{.UserName}} </a> </div>
+				<!--
+				<div> <a href="#" onclick="AskFunc();" > {{.UserName}} </a> </div>
+				-->
 			{{ end }}
 		{{ end }}
 	</aside>

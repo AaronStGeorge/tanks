@@ -4,6 +4,7 @@
 package main
 
 import (
+	"github.com/apcera/nats"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -11,28 +12,14 @@ import (
 
 var upgrader = &websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
 
-func (g *Global) wsHandler(w http.ResponseWriter, r *http.Request) {
-
-	ws, err := upgrader.Upgrade(w, r, nil)
+func (g *Global) subFunc(s string, toPage chan interface{}) *nats.Subscription {
+	sub, err := g.ec.Subscribe(s, func(v interface{}) {
+		toPage <- v
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	user, err := GetUser(r)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	recvCh := make(chan interface{})
-	defer close(recvCh)
-	g.ec.BindRecvChan("hello", recvCh)
-	sendCh := make(chan interface{})
-	defer close(sendCh)
-	g.ec.BindSendChan("hello", sendCh)
-
-	c := &connection{sendCh: sendCh, recvCh: recvCh, ws: ws, user: user}
-	go c.writer()
-	c.reader()
+	return sub
 }
 
 func (g *Global) mainPageWs(w http.ResponseWriter, r *http.Request) {
@@ -53,27 +40,42 @@ func (g *Global) mainPageWs(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	// listen to messages from all friends
-	recvCh := make(chan interface{})
-	defer close(recvCh)
+	toPage := make(chan interface{})
+	defer close(toPage)
+	sub := g.subFunc(user.PhoneNumber, toPage)
+	defer sub.Unsubscribe()
 	for _, friend := range friends {
-		sub, err := g.ec.Subscribe(string(friend.Id), func(v interface{}) {
-			recvCh <- v
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
+		sub := g.subFunc(friend.Twitter, toPage)
 		defer sub.Unsubscribe()
 	}
 
-	// create bind send channel
-	sendCh := make(chan interface{})
-	defer close(sendCh)
-	g.ec.BindSendChan(string(user.Id), sendCh)
+	g.ec.Publish(user.PhoneNumber, Message{Origin: user,
+		PubTo: user.PhoneNumber, Content: "INIT"})
 
-	sendCh <- Message{Origin: user, Content: "PING"}
+	c := &connection{g: g, toPage: toPage, ws: ws, user: user}
 
-	c := &connection{sendCh: sendCh, recvCh: recvCh, ws: ws, user: user}
+	go c.writer()
+	c.reader()
+}
+
+func (g *Global) gamePageWs(w http.ResponseWriter, r *http.Request) {
+
+	ws, err := upgrader.Upgrade(w, r, nil)
+	defer ws.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	user, err := GetUser(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	toPage := make(chan interface{})
+	sub := g.subFunc(user.PhoneNumber, toPage)
+	defer sub.Unsubscribe()
+
+	c := &connection{g: g, toPage: toPage, ws: ws, user: user}
 
 	go c.writer()
 	c.reader()
