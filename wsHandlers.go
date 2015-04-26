@@ -12,8 +12,8 @@ import (
 
 var upgrader = &websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
 
-func (g *Global) subFunc(s string, toPage chan interface{}) *nats.Subscription {
-	sub, err := g.ec.Subscribe(s, func(v interface{}) {
+func (g *Global) subFunc(s string, toPage chan Message) *nats.Subscription {
+	sub, err := g.ec.Subscribe(s, func(v Message) {
 		toPage <- v
 	})
 	if err != nil {
@@ -40,7 +40,7 @@ func (g *Global) mainPageWs(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	toPage := make(chan interface{})
+	toPage := make(chan Message)
 	defer close(toPage)
 	sub := g.subFunc(user.PhoneNumber, toPage)
 	defer sub.Unsubscribe()
@@ -71,7 +71,7 @@ func (g *Global) gamePageWs(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	toPage := make(chan interface{})
+	toPage := make(chan Message)
 	sub := g.subFunc(user.PhoneNumber, toPage)
 	defer sub.Unsubscribe()
 

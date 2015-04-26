@@ -15,13 +15,13 @@ func ErrNoPubTo(m Message) error {
 type Message struct {
 	Origin  User
 	PubTo   string
-	Content string
+	Content interface{}
 }
 
 type connection struct {
 	// The websocket connection.
 	ws     *websocket.Conn
-	toPage <-chan interface{}
+	toPage <-chan Message
 	user   User
 	g      *Global
 }
