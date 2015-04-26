@@ -20,6 +20,16 @@ function moveOpponent(x, y) {
         .attr("cy", function(d) {
             return d.y;
         });
+    svg.select("#text" + opponent.PhoneNumber)
+        .transition()
+        .ease("linear")
+        .duration(300)
+        .attr("x", function(d) {
+            return d.x;
+        })
+        .attr("y", function(d) {
+            return d.y;
+        });
 }
 
 
@@ -55,24 +65,28 @@ if (me.Id > opponent.Id) {
     meCoords = {
         "x": width / 3,
         "y": height / 2,
-        "color": "blue"
+        "color": "blue",
+        "name": me.UserName
     };
     opponentCoords = {
         "x": 2 * width / 3,
         "y": height / 2,
-        "color": "red"
+        "color": "red",
+        "name": opponent.UserName
     };
 
 } else {
     meCoords = {
         "x": 2 * width / 3,
         "y": height / 2,
-        "color": "red"
+        "color": "red",
+        "name": me.UserName
     };
     opponentCoords = {
         "x": width / 3,
         "y": height / 2,
-        "color": "blue"
+        "color": "blue",
+        "name": opponent.UserName
     };
 }
 
@@ -105,6 +119,34 @@ svg.selectAll("circle")
     .style("stroke", "black")
     .style("stroke-width", "3");
 
+//Add the SVG Text Element to the svgContainer
+var text = svg.selectAll("text")
+    .data(dataset)
+    .enter()
+    .append("text");
+
+//Add SVG Text Element Attributes
+var textLabels = text
+    .attr("x", function(d) {
+        return d.x;
+    })
+    .attr("y", function(d) {
+        return d.y;
+    })
+    .text(function(d) {
+        return d.name;
+    })
+    .attr("id", function(d, i) {
+        if (i === 0) {
+            return "text" + me.PhoneNumber;
+        } else {
+            return "text" + opponent.PhoneNumber;
+        }
+    })
+    .attr("font-size", "4em")
+    .attr("font-family", "sans-serif")
+    .attr("text-anchor", "middle")
+    .attr("fill", "black");
 
 function move() {
     svg.select("#" + me.PhoneNumber)
@@ -115,6 +157,16 @@ function move() {
             return d.x;
         })
         .attr("cy", function(d) {
+            return d.y;
+        });
+    svg.select("#text" + me.PhoneNumber)
+        .transition()
+        .ease("linear")
+        .duration(300)
+        .attr("x", function(d) {
+            return d.x;
+        })
+        .attr("y", function(d) {
             return d.y;
         });
     ws.send(JSON.stringify({

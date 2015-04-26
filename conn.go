@@ -6,6 +6,13 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
+	"time"
+)
+
+const (
+	writeWait  = 10 * time.Second
+	pongWait   = 10 * time.Second
+	pingPeriod = (pongWait * 9) / 10
 )
 
 func ErrNoPubTo(m Message) error {
@@ -27,6 +34,18 @@ type connection struct {
 }
 
 func (c *connection) reader() {
+	defer func() {
+		c.g.ec.Publish(c.user.Twitter, Message{Origin: c.user,
+			Content: "CLOSE"})
+		c.ws.Close()
+	}()
+
+	c.ws.SetReadDeadline(time.Now().Add(pongWait))
+	c.ws.SetPongHandler(func(string) error {
+		c.ws.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
 	for {
 		_, data, err := c.ws.ReadMessage()
 		if err != nil {
@@ -43,24 +62,43 @@ func (c *connection) reader() {
 			log.Fatal(ErrNoPubTo(message))
 		}
 
-		fmt.Printf("Sent to hub %+v\n", message)
-
 		// publish to Nats message hub
 		c.g.ec.Publish(message.PubTo, message)
 	}
-	c.g.ec.Publish(c.user.Twitter, Message{Origin: c.user, Content: "CLOSE"})
-	c.ws.Close()
 }
 
 func (c *connection) writer() {
-	for message := range c.toPage {
+	ticker := time.NewTicker(pingPeriod)
 
-		fmt.Printf("Received from hub %+v\n", message)
+	defer func() {
+		ticker.Stop()
+		c.ws.Close()
+	}()
 
-		err := c.ws.WriteJSON(message)
-		if err != nil {
-			break
+	for {
+		select {
+		case message, ok := <-c.toPage:
+			if !ok {
+				c.write(websocket.CloseMessage, []byte{})
+				return
+			}
+			if err := c.writeJSON(message); err != nil {
+				return
+			}
+		case <-ticker.C:
+			if err := c.write(websocket.PingMessage, []byte{}); err != nil {
+				return
+			}
 		}
 	}
-	c.ws.Close()
+}
+
+func (c *connection) write(mt int, message []byte) error {
+	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
+	return c.ws.WriteMessage(mt, message)
+}
+
+func (c *connection) writeJSON(message Message) error {
+	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
+	return c.ws.WriteJSON(message)
 }

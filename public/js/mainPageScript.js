@@ -1,6 +1,13 @@
 var me;
 var ws;
 
+// make link green and bold
+function userOnline(id) {
+    var link = document.getElementById(id);
+    link.style.color = "green";
+    link.style.fontWeight = 'bold';
+}
+
 $(function() {
 
     ws = new WebSocket("ws://aaronstgeorge.co/mpws");
@@ -19,14 +26,14 @@ $(function() {
                 Content: "PING"
             }));
         } else if (obj.Content == "PING") {
-            document.getElementById(obj.Origin.Id).style.color = "green";
+            userOnline(obj.Origin.Id);
             ws.send(JSON.stringify({
                 Origin: me,
                 PubTo: obj.Origin.PhoneNumber,
                 Content: "PONG"
             }));
         } else if (obj.Content == "PONG") {
-            document.getElementById(obj.Origin.Id).style.color = "green";
+            userOnline(obj.Origin.Id);
         } else if (obj.Content == "CLOSE") {
             document.getElementById(obj.Origin.Id).style.color = "black";
         } else if (obj.Content == "ASK") {
