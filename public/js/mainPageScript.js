@@ -8,6 +8,12 @@ function userOnline(id) {
     link.style.fontWeight = 'bold';
 }
 
+function userOffline(id) {
+    var link = document.getElementById(id);
+    link.style.color = "black";
+    link.style.fontWeight = "normal";
+}
+
 $(function() {
 
     ws = new WebSocket("ws://aaronstgeorge.co/mpws");
@@ -35,7 +41,7 @@ $(function() {
         } else if (obj.Content == "PONG") {
             userOnline(obj.Origin.Id);
         } else if (obj.Content == "CLOSE") {
-            document.getElementById(obj.Origin.Id).style.color = "black";
+            userOffline(obj.Origin.Id);
         } else if (obj.Content == "ASK") {
             var r = confirm("Play a game with " + obj.Origin.UserName + "?");
             if (r === true) {
@@ -63,7 +69,7 @@ $(function() {
             // redirect to game play
             window.location.href = "/play";
         } else if (obj.Content == "DENY") {
-            alert(obj.UserName + " is busy");
+            alert(obj.Origin.UserName + " is busy");
         } else {
             alert(event.data);
         }
