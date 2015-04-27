@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	writeWait  = 10 * time.Second
+	writeWait  = 5 * time.Second
 	pongWait   = 5 * time.Second
 	pingPeriod = (pongWait * 9) / 10
 )
@@ -49,11 +49,10 @@ func (c *connection) reader() {
 	for {
 		_, data, err := c.ws.ReadMessage()
 		if err != nil {
-			break
+			return
 		}
 
 		var message Message
-
 		err = json.Unmarshal(data, &message)
 		if err != nil {
 			log.Fatal(err)

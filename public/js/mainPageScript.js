@@ -52,7 +52,7 @@ $(function() {
                     Content: "CONFIRM"
                 }));
                 // store opponent
-                localStorage.setItem("lastname", "Smith");
+                sessionStorage.setItem("opponent", JSON.stringify(obj.Origin));
                 // redirect to game play
                 window.location.href = "/play";
 

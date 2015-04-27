@@ -35,11 +35,9 @@ function moveOpponent(x, y) {
 
 $(function() {
 
-    /* TODO: uncoment these lines
-       // remove old values
-       sessionStorage.removeItem("me");
-       sessionStorage.removeItem("opponent");
-      */
+    // remove old values
+    sessionStorage.removeItem("me");
+    sessionStorage.removeItem("opponent");
 
     ws = new WebSocket("ws://aaronstgeorge.co/gpws");
 

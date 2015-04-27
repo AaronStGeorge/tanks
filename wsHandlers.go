@@ -24,38 +24,41 @@ func (g *Global) subFunc(s string, toPage chan Message) *nats.Subscription {
 
 func (g *Global) mainPageWs(w http.ResponseWriter, r *http.Request) {
 
-	ws, err := upgrader.Upgrade(w, r, nil)
-	defer ws.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	user, err := GetUser(r)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	friends, err := GetFrends(r)
-	if err != nil {
-		log.Fatal(err)
-	}
+	if user.Id != -1 {
 
-	toPage := make(chan Message)
-	defer close(toPage)
-	sub := g.subFunc(user.PhoneNumber, toPage)
-	defer sub.Unsubscribe()
-	for _, friend := range friends {
-		sub := g.subFunc(friend.Twitter, toPage)
+		ws, err := upgrader.Upgrade(w, r, nil)
+		defer ws.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		friends, err := GetFrends(r)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		toPage := make(chan Message)
+		defer close(toPage)
+		sub := g.subFunc(user.PhoneNumber, toPage)
 		defer sub.Unsubscribe()
+		for _, friend := range friends {
+			sub := g.subFunc(friend.Twitter, toPage)
+			defer sub.Unsubscribe()
+		}
+
+		g.ec.Publish(user.PhoneNumber, Message{Origin: user,
+			PubTo: user.PhoneNumber, Content: "INIT"})
+
+		c := &connection{g: g, toPage: toPage, ws: ws, user: user}
+
+		go c.writer()
+		c.reader()
 	}
-
-	g.ec.Publish(user.PhoneNumber, Message{Origin: user,
-		PubTo: user.PhoneNumber, Content: "INIT"})
-
-	c := &connection{g: g, toPage: toPage, ws: ws, user: user}
-
-	go c.writer()
-	c.reader()
 }
 
 func (g *Global) gamePageWs(w http.ResponseWriter, r *http.Request) {
@@ -72,6 +75,7 @@ func (g *Global) gamePageWs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	toPage := make(chan Message)
+	defer close(toPage)
 	sub := g.subFunc(user.PhoneNumber, toPage)
 	defer sub.Unsubscribe()
 
