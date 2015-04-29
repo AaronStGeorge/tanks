@@ -7,31 +7,6 @@ var me,
 var pixelsPerTick = 10;
 
 
-function moveOpponent(x, y) {
-    opponentCoords.x = x;
-    opponentCoords.y = y;
-    svg.select("#" + opponent.PhoneNumber)
-        .transition()
-        .ease("linear")
-        .duration(300)
-        .attr("cx", function(d) {
-            return d.x;
-        })
-        .attr("cy", function(d) {
-            return d.y;
-        });
-    svg.select("#text" + opponent.PhoneNumber)
-        .transition()
-        .ease("linear")
-        .duration(300)
-        .attr("x", function(d) {
-            return d.x;
-        })
-        .attr("y", function(d) {
-            return d.y;
-        });
-}
-
 
 $(function() {
 
@@ -90,6 +65,13 @@ if (me.Id > opponent.Id) {
 
 var dataset = [meCoords, opponentCoords];
 
+// height of text in pixels
+var textpx = 40;
+
+function adjustYCoordForText(yCoord) {
+    return yCoord + textpx / 4.0;
+}
+
 var svg = d3.select("body").append("svg")
     .attr("width", width)
     .attr("height", height);
@@ -129,7 +111,7 @@ var textLabels = text
         return d.x;
     })
     .attr("y", function(d) {
-        return d.y;
+        return adjustYCoordForText(d.y);
     })
     .text(function(d) {
         return d.name;
@@ -141,7 +123,7 @@ var textLabels = text
             return "text" + opponent.PhoneNumber;
         }
     })
-    .attr("font-size", "4em")
+    .attr("font-size", textpx + "px")
     .attr("font-family", "sans-serif")
     .attr("text-anchor", "middle")
     .attr("fill", "black");
@@ -165,7 +147,7 @@ function move() {
             return d.x;
         })
         .attr("y", function(d) {
-            return d.y;
+            return adjustYCoordForText(d.y);
         });
     ws.send(JSON.stringify({
         Origin: me,
@@ -175,6 +157,31 @@ function move() {
             "y": meCoords.y
         }
     }));
+}
+
+function moveOpponent(x, y) {
+    opponentCoords.x = x;
+    opponentCoords.y = y;
+    svg.select("#" + opponent.PhoneNumber)
+        .transition()
+        .ease("linear")
+        .duration(300)
+        .attr("cx", function(d) {
+            return d.x;
+        })
+        .attr("cy", function(d) {
+            return d.y;
+        });
+    svg.select("#text" + opponent.PhoneNumber)
+        .transition()
+        .ease("linear")
+        .duration(300)
+        .attr("x", function(d) {
+            return d.x;
+        })
+        .attr("y", function(d) {
+            return adjustYCoordForText(d.y);
+        });
 }
 
 
