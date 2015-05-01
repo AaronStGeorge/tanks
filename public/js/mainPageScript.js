@@ -19,6 +19,12 @@ $(function() {
     ws = new WebSocket("ws://aaronstgeorge.co/mpws");
     // WebSocket connection established
 
+    /*
+       ws.onclose = function(event) {
+           alert("WebSocket closed");
+       };
+      */
+
     ws.onmessage = function(event) {
 
         obj = JSON.parse(event.data);
