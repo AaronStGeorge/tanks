@@ -1,4 +1,4 @@
 # tanks-app
-Online game that cen be played by two people any place on the planet. Drive tanks around and shoot at eachother.
+Online game that cen be played by two people any place on the planet. Drive tanks around and shoot at eachother. Site is deployed at [this domain](http://aaronstgeorge.co/)
 
-Using websockets and the GO programming language.
+Using websockets and the [Go programming language](http://golang.org/).
